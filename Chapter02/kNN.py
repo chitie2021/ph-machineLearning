@@ -1,5 +1,6 @@
 from numpy import *
 import operator
+from os import listdir
 
 def createDataSet():
     group = array([[1.0, 1.1], [1.0, 1.0], [0, 0], [0, 0.1]])
@@ -72,12 +73,38 @@ def classifyPerson():
     classifierResult = int(classify0((inArr - minVals) / ranges, normMat, datingLabels, 3))
     print(f"You will probably like this person: {resultList[classifierResult - 1]}")
 
-if __name__ == '__main__':
-    # Uncomment the following lines to run the functions
-    # group, labels = createDataSet()
-    # print(classify0([0, 0], group, labels, 3))
-    # datingClassTest()
-    classifyPerson()
+def img2vector(filename):
+    returnVect = zeros((1, 1024))
+    fr = open(filename)
+    for i in range(32):
+        lineStr = fr.readline()
+        for j in range(32):
+            returnVect[0, 32 * i + j] = int(lineStr[j])
+    return returnVect
 
-# Uncomment the following line to run the dating class test
-# datingClassTest()
+def handwritingClassTest():
+    hwLabels = []
+    trainingFileList = listdir('trainingDigits')
+    m = len(trainingFileList)
+    trainingMat = zeros((m, 1024))
+    for i in range(m):
+        fileNameStr = trainingFileList[i]
+        classNumStr = int(fileNameStr.split('_')[0])
+        hwLabels.append(classNumStr)
+        trainingMat[i, :] = img2vector(f'trainingDigits/{fileNameStr}')
+    
+    testFileList = listdir('testDigits')
+    errorCount = 0.0
+    mTest = len(testFileList)
+    
+    for i in range(mTest):
+        fileNameStr = testFileList[i]
+        classNumStr = int(fileNameStr.split('_')[0])
+        vectorUnderTest = img2vector(f'testDigits/{fileNameStr}')
+        classifierResult = classify0(vectorUnderTest, trainingMat, hwLabels, 3)
+        print(f'The classifier came back with: {classifierResult}, the real answer is: {classNumStr}')
+        if classifierResult != classNumStr:
+            errorCount += 1.0
+    
+    print(f'The total number of errors is: {errorCount}')
+    print(f'The total error rate is: {errorCount / float(mTest)}')
